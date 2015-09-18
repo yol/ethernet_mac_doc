@@ -1,0 +1,30 @@
+\Large
+\begin{tikztimingtable}[help lines/.style={dashed},timing/wscale=2,ttext/.style={node font=\small}]
+	\texttt{CLK} & 3{C}     N(t1)  4{C}  N(t2)  4{C} \\
+	\texttt{D}   &    2L 1H N(t1b) 1H 2.8L N(tv) 0.2H N(t2b) 4.2H \\
+	\texttt{Q}   & 3L 1H 1H        2L           2.2M 1.8H \\
+\extracode
+%	\tablerules
+	\begin{pgfonlayer}{background}
+		\def\wscale{2}
+		\def\setuptime{-0.6*\wscale}
+		\def\holdtime{0.6*\wscale}
+		\def\topext{1}
+		\def\arrowext{0.7}
+		
+		\draw [<->] ($(t1.HIGH) + (\setuptime,\arrowext)$) -- ($(t1.HIGH) + (0,\arrowext)$) node [ttext,above,pos=0,minimum height=0.8cm] {$T_{setup}$};
+		\draw [<->] ($(t1.HIGH) + (0,\arrowext)$) -- ($(t1.HIGH) + (\holdtime,\arrowext)$) node [ttext,above,pos=1,minimum height=0.8cm] {$T_{hold}$};
+		\draw [<->] ($(t2.HIGH) + (\setuptime,\arrowext)$) -- ($(t2.HIGH) + (\holdtime,\arrowext)$) node [ttext,above,midway,minimum height=0.8cm] {$T_{setup} + T_{hold}$};
+		
+		\draw [Tgreenlight,semithick] (t1b.HIGH) circle [x radius=\setuptime,y radius=0.3];
+		\draw [Tredlight  ,semithick] (tv.mid)   circle [x radius=0.3,y radius=1];
+		\node [ttext,red,below right=-1mm and 0.5mm] at (tv.LOW) {timing violation};
+		
+		\draw [help lines]
+		($(t1.HIGH) + (0,\topext)$) -- (t1b.LOW)
+		($(t1.HIGH) + (\setuptime,\topext)$) -- ($(t1b.LOW) + (\setuptime,0)$)
+		($(t1.HIGH) + (\holdtime,\topext)$)  -- ($(t1b.LOW) + (\holdtime,0)$)
+		($(t2.HIGH) + (\setuptime,\topext)$) -- ($(t2b.LOW) + (\setuptime,0)$)
+		($(t2.HIGH) + (\holdtime,\topext)$)  -- ($(t2b.LOW) + (\holdtime,0)$);
+	\end{pgfonlayer}
+\end{tikztimingtable}

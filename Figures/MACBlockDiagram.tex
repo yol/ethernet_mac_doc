@@ -1,0 +1,95 @@
+\begin{tikzpicture}[
+	every node/.style={
+		node font=\footnotesize
+	},
+	block/.style={
+		draw=black,
+		shade,
+		shading=axis,
+		top color=Tbluelight!50,
+		bottom color=Tbluelight!80,
+		rounded corners,
+		align=center,
+		minimum height=1.5cm,
+		%minimum width=2cm,
+		text width=1.5cm,
+		node font=\ttfamily\footnotesize
+	},
+	devdep/.style={
+		top color=Torangelight!30,bottom color=Torangelight!70
+	},
+	bus/.style={
+		%double=white,
+		double,
+		line width=1pt,
+		double distance=4pt
+	},
+	enclosure/.style={
+		draw=black,
+%		dashed,
+		fill=Tlilaclight!20
+	},
+	busp/.tip={Implies[length=5mm,fill=white]},
+	<->/.tip=Latex
+]
+	\pgfdeclarelayer{bg}
+	\pgfsetlayers{bg,main}
+	
+	\def\nodesize{2cm}
+	\def\nodeenclosuresep{0.4}
+	\def\arrowsep{0.5}
+
+	\node[block] (MII) {mii\_gmii};
+
+	\node[block,left=of MII] (Framing) {framing};
+	\node[block,right=of MII,devdep] (IO)  {mii\_gmii\_\\io};
+	\node[block,below=of MII] (MIIMC) {miim\_\\control};
+	\node[block,right=of MIIMC] (MIIM) {miim};
+	
+	\node[block,left=of Framing] (TXFIFO) {tx\_fifo};
+	\node[block,below=of TXFIFO] (RXFIFO) {rx\_fifo};
+	
+	\path ($(TXFIFO.west)!.5!(RXFIFO.west)+(-1.5,0)$) node[rotate=90] {\large \bfseries User application};
+	\path ($(IO.east)!.5!(MIIM.east)+(2,0)$) node[rotate=90] {\large \bfseries PHY};
+	
+	\draw[vecArrowStart] (TXFIFO.west) -- ++(-1cm,0) coordinate (TXFIFOArrowEnd);
+	\draw[vecArrowEndTX] (TXFIFO.east) -- ++(0.5,0) |- ($(Framing.west)+(0,\arrowsep)$);
+	\draw[vecArrowEndTX] ($(Framing.east)+(0,\arrowsep)$) -- ($(MII.west)+(0,\arrowsep)$);
+	\draw[vecArrowEndTX] ($(MII.east)+(0,\arrowsep)$) -- ($(IO.west)+(0,\arrowsep)$);
+	\draw[vecArrowEndTX] ($(IO.east)+(0,\arrowsep)$) -- ++(1.5cm,0);
+	
+	\draw[vecArrowEnd] (RXFIFO.west) -- ++(-1cm,0);
+	\draw[vecArrowStartRX] (RXFIFO.east) -- ++(0.5cm,0) |- ($(Framing.west)+(0,-\arrowsep)$);
+	\draw[vecArrowStartRX] ($(Framing.east)+(0,-\arrowsep)$) -- ($(MII.west)+(0,-\arrowsep)$);
+	\draw[vecArrowStartRX] ($(MII.east)+(0,-\arrowsep)$) -- ($(IO.west)+(0,-\arrowsep)$);
+	\draw[vecArrowStartRX] ($(IO.east)+(0,-\arrowsep)$) -- ++(1.5cm,0);
+	
+	\draw[->] (MIIMC) -- (MII) node [midway,above right] {\texttt{speed}} node [midway,linepoint] (SpeedMid) {};
+	\draw[->] (SpeedMid) -- ++(-3.3,0) |- ($(RXFIFO.south west)+(-1,-0.7)$);
+	\draw[->] (SpeedMid) -| (IO);
+	\draw[->] (MIIMC) -- ++(-3,0) node [above,pos=0.5] {\texttt{link\_up}} |- ($(RXFIFO.south west)+(-1,-1)$);
+	\draw[vecArrowStartMIIM,vecArrowEndMIIM] (MIIMC) -- (MIIM);
+	\draw[vecArrowStartMIIM,vecArrowEndMIIM] (MIIM.east)  -- ++(1.5,0);
+	
+	\path ($(Framing.north west)+(-\nodeenclosuresep,2*\nodeenclosuresep)+(0,-0.1cm)$) coordinate (EthernetClockin);
+	\draw [->] (EthernetClockin -| TXFIFOArrowEnd) -- (EthernetClockin) node[pos=1,above left] {125~MHz clock};
+	\draw [->] (EthernetClockin -| TXFIFOArrowEnd) ++ (0,-0.5cm) -- ($(EthernetClockin) + (0,-0.5cm)$) node[pos=1,above left] {MIIM clock};
+	
+	\node [block,anchor=north west,node font=\footnotesize,minimum size=0.5cm,text width=] at ($(RXFIFO.south west) + (0,-4*\nodeenclosuresep)$) (IndepBlockLegendNode) {};
+	\node [right=0.1cm of IndepBlockLegendNode] (IndepBlockLegend) {\footnotesize Device-independent VHDL entity};
+	\node [right=0.4cm of IndepBlockLegend,block,devdep,minimum size=0.5cm,text width=] (DepBlockLegendNode) {};
+	\node [right=0.1cm of DepBlockLegendNode] (DepBlockLegend) {\footnotesize Device-dependent VHDL entity};
+	
+	\draw [vecArrowEndTX] ($(IndepBlockLegendNode.south west) + (0,-\nodeenclosuresep)$) coordinate(TXCLKArrow) -- ++(1cm,0) node[right] (TXCLKText) {MII TX clock domain};
+	\draw [vecArrowEndRX] ($(TXCLKText.east) + (0.3,0)$) coordinate(RXCLKArrow) -- ++(1cm,0) node[right] {MII RX clock domain};
+	\draw [vecArrowEnd] ($(TXCLKArrow) + (0,-\nodeenclosuresep)$) -- ++(1cm,0) node[right] (UserCLKText) {User clock domains};
+	\draw [vecArrowEndMIIM] ($(RXCLKArrow) + (0,-\nodeenclosuresep)$) -- ++(1cm,0) node[right] {MII management clock domain};
+	
+	\begin{pgfonlayer}{bg}
+		\fill[enclosure] ($(TXFIFO.north west)+(-\nodeenclosuresep,4*\nodeenclosuresep)$) rectangle ($(MIIM.south east)+(2*\nodeenclosuresep,-3*\nodeenclosuresep)$);
+		\fill[enclosure,fill=Tlilaclight!50,dashed] ($(Framing.north west)+(-\nodeenclosuresep,2*\nodeenclosuresep)$) rectangle ($(MIIM.south east)+(\nodeenclosuresep,-\nodeenclosuresep)$);
+		\path ($(IO.north east)$) node [above left=0.2 and 0] {\texttt{ethernet}};
+		\path ($(IO.north east)$) node [above left=0.2+2*\nodeenclosuresep and 0] {\texttt{ethernet\_with\_fifos}};		
+	\end{pgfonlayer}
+
+\end{tikzpicture}

@@ -1,0 +1,141 @@
+\makeatletter
+\let\pgfutil@Alph\@Alph % should be the proper definition for use outside of LaTeX
+\let\pgfutil@alph\@alph % dito
+\pgfmathdeclarefunction{Alph}{1}{%
+  \begingroup\edef\pgfmathresult{\pgfutil@Alph{#1}}%
+  \pgfmath@smuggleone\pgfmathresult\endgroup}
+\pgfmathdeclarefunction{alph}{1}{%
+  \begingroup\edef\pgfmathresult{\pgfutil@alph{#1}}%
+  \pgfmath@smuggleone\pgfmathresult\endgroup}
+\pgfdeclareshape{gLogic}{%
+  \savedmacro\gLogicparameters{%
+    \pgfmathtruncatemacro\eports{\pgfkeysvalueof{/pgf/gLogic east ports}}%
+    \pgfmathtruncatemacro\wports{\pgfkeysvalueof{/pgf/gLogic west ports}}%
+    \pgfmathtruncatemacro\nports{\pgfkeysvalueof{/pgf/gLogic north ports}}%
+    \pgfmathtruncatemacro\sports{\pgfkeysvalueof{/pgf/gLogic south ports}}%
+    \addtosavedmacro\eports \addtosavedmacro\wports
+    \addtosavedmacro\nports \addtosavedmacro\sports
+    \let\pgf@gLogic@i\relax
+    \let\pgf@gLogic@n\relax
+    \edef\efunction{\pgfkeysvalueof{/pgf/@gLogic east function/.@cmd}{\pgf@gLogic@i}{\pgf@gLogic@n}\pgfeov}
+    \edef\wfunction{\pgfkeysvalueof{/pgf/@gLogic west function/.@cmd}{\pgf@gLogic@i}{\pgf@gLogic@n}\pgfeov}
+    \edef\nfunction{\pgfkeysvalueof{/pgf/@gLogic north function/.@cmd}{\pgf@gLogic@i}{\pgf@gLogic@n}\pgfeov}
+    \edef\sfunction{\pgfkeysvalueof{/pgf/@gLogic south function/.@cmd}{\pgf@gLogic@i}{\pgf@gLogic@n}\pgfeov}
+    \addtosavedmacro\efunction \addtosavedmacro\wfunction
+    \addtosavedmacro\nfunction \addtosavedmacro\sfunction
+  }
+  \saveddimen\pinlength{\pgfmathsetlength\pgf@x{\pgfkeysvalueof{/pgf/gLogic pin length}}}%
+  \inheritsavedanchors[from=rectangle ee]
+  \inheritanchor[from=rectangle ee]{center}
+  \inheritanchor[from=rectangle ee]{north}
+  \inheritanchor[from=rectangle ee]{south}
+  \inheritanchor[from=rectangle ee]{east}
+  \inheritanchor[from=rectangle ee]{west}
+  \inheritanchor[from=rectangle ee]{north east}
+  \inheritanchor[from=rectangle ee]{north west}
+  \inheritanchor[from=rectangle ee]{south east}
+  \inheritanchor[from=rectangle ee]{south west}
+  \inheritanchor[from=rectangle ee]{input} % eh?
+  \inheritanchor[from=rectangle ee]{output}% eh?
+  \inheritanchorborder[from=rectangle ee]
+  \inheritbackgroundpath[from=rectangle ee]
+  \behindbackgroundpath{%
+    \pgfmathsetlength\pgfutil@tempdima{\pgfkeysvalueof{/pgf/gLogic pin length}}%
+    \pgfmathtruncatemacro\pgf@gLogic@t{\eports+\nports+\wports+\sports}%
+    \pgfextract@process\southeast{\csname pgf@anchor@gLogic@south east\endcsname}%
+    \pgfextract@process\northwest{\csname pgf@anchor@gLogic@north west\endcsname}%
+    \c@pgf@counta\eports
+    \let\pgf@gLogic@n\eports
+    \pgfmathloop\ifnum\c@pgf@counta>0
+      \let\pgf@gLogic@i\pgfmathcounter
+      \pgfextract@process\pgf@temp{\pgfpointlineattime{\efunction}{\southeast}{\northeast}}%
+      \pgfpathmoveto{\pgf@temp}%
+      \pgfpathlineto{\pgfpointadd{\pgf@temp}{\pgfqpoint{\pgfutil@tempdima}{0pt}}}%
+      \advance\c@pgf@counta-1
+      \pgftext[bottom,left,at=\pgf@temp,y=8\pgflinewidth,x=4\pgflinewidth]{\pgfkeysvalueof{/pgf/@gLogic east label/.@cmd}{\pgf@gLogic@i}{\pgf@gLogic@n}{\pgf@gLogic@t}\pgfeov}
+    \repeatpgfmathloop
+    \pgf@gLogic@makeanchors{e}{\csname pgf@anchor@gLogic@south east\endcsname}{\csname northeast\endcsname}{\noexpand\pinlength}{0pt}%
+    %
+    \c@pgf@counta\nports
+    \let\pgf@gLogic@n\nports
+    \pgfmathloop\ifnum\c@pgf@counta>0
+      \let\pgf@gLogic@i\pgfmathcounter
+      \pgfextract@process\pgf@temp{\pgfpointlineattime{\nfunction}{\northeast}{\northwest}}%
+      \pgfpathmoveto{\pgf@temp}%
+      \pgfpathlineto{\pgfpointadd{\pgf@temp}{\pgfqpoint{0pt}{\pgfutil@tempdima}}}%
+      \advance\c@pgf@counta-1
+      \pgftext[right,bottom,at=\pgf@temp,x=-2\pgflinewidth,y=2\pgflinewidth]{\pgfkeysvalueof{/pgf/@gLogic north label/.@cmd}{\pgf@gLogic@i}{\pgf@gLogic@n}{\pgf@gLogic@t}\pgfeov}
+    \repeatpgfmathloop
+    \pgf@gLogic@makeanchors{n}{\csname northeast\endcsname}{\csname pgf@anchor@gLogic@north west\endcsname}{0pt}{\noexpand\pinlength}%
+    %
+    \c@pgf@counta\wports
+    \let\pgf@gLogic@n\wports
+    \pgfmathloop\ifnum\c@pgf@counta>0
+      \let\pgf@gLogic@i\pgfmathcounter
+      \pgfextract@process\pgf@temp{\pgfpointlineattime{\wfunction}{\northwest}{\southwest}}%
+      \pgfpathmoveto{\pgf@temp}%
+      \pgfpathlineto{\pgfpointadd{\pgf@temp}{\pgfqpoint{-\pgfutil@tempdima}{0pt}}}%
+      \advance\c@pgf@counta-1
+      \pgftext[bottom,right,at=\pgf@temp,y=8\pgflinewidth,x=-4\pgflinewidth]{\pgfkeysvalueof{/pgf/@gLogic west label/.@cmd}{\pgf@gLogic@i}{\pgf@gLogic@n}{\pgf@gLogic@t}\pgfeov}
+    \repeatpgfmathloop
+    \pgf@gLogic@makeanchors{w}{\csname pgf@anchor@gLogic@north west\endcsname}{\csname southwest\endcsname}{-\noexpand\pinlength}{0pt}%
+    %
+    \c@pgf@counta\sports
+    \let\pgf@gLogic@n\sports
+    \pgfmathloop\ifnum\c@pgf@counta>0
+      \let\pgf@gLogic@i\pgfmathcounter
+      \pgfextract@process\pgf@temp{\pgfpointlineattime{\sfunction}{\southwest}{\southeast}}%
+      \pgfpathmoveto{\pgf@temp}%
+      \pgfpathlineto{\pgfpointadd{\pgf@temp}{\pgfqpoint{0pt}{-\pgfutil@tempdima}}}%
+      \advance\c@pgf@counta-1
+      \pgftext[right,top,at=\pgf@temp,x=-2\pgflinewidth,y=-2\pgflinewidth]{\pgfkeysvalueof{/pgf/@gLogic south label/.@cmd}{\pgf@gLogic@i}{\pgf@gLogic@n}{\pgf@gLogic@t}\pgfeov}%
+    \repeatpgfmathloop
+    \pgf@gLogic@makeanchors{s}{\csname southwest\endcsname}{\csname pgf@anchor@gLogic@south east\endcsname}{0pt}{-\noexpand\pinlength}%
+  }
+}
+\def\pgf@gLogic@makeanchors#1#2#3#4#5{%
+  \c@pgf@counta\pgf@gLogic@n
+  \let\pgf@gLogic@n\relax
+  \pgfmathloop%
+    \ifnum\c@pgf@counta>0\relax%
+      \pgfutil@ifundefined{pgf@anchor@gLogic@#1Pin\space\the\c@pgf@counta}{%
+        \expandafter\xdef\csname pgf@anchor@gLogic@#1Pin\space\the\c@pgf@counta\endcsname{%
+          \noexpand\gLogicparameters
+          \let\noexpand\pgf@gLogic@n\expandafter\noexpand\csname #1ports\endcsname
+          \edef\noexpand\pgf@gLogic@i{\the\c@pgf@counta}%
+          \noexpand\pgfpointadd{\noexpand\pgfpointlineattime
+            {\expandafter\noexpand\csname #1function\endcsname}{\expandafter\noexpand#2}{\expandafter\noexpand#3}}{\noexpand\pgfqpoint{#4}{#5}}%
+        }%
+      }{\c@pgf@counta0\relax}% 
+    \advance\c@pgf@counta-1\relax%
+  \repeatpgfmathloop%  
+}
+\makeatother
+\pgfset{
+  gLogic east ports/.initial =2,
+  gLogic west ports/.initial =2,
+  gLogic north ports/.initial=2,
+  gLogic south ports/.initial=2,
+  gLogic ports/.style args={#1:#2:#3:#4}{
+    /pgf/gLogic east ports ={#1},/pgf/gLogic west ports ={#3},
+    /pgf/gLogic north ports={#2},/pgf/gLogic south ports={#4}},
+  set gLogic east function/.style ={/pgf/@gLogic east function/.code 2 args={#1}},
+  set gLogic west function/.style ={/pgf/@gLogic west function/.code 2 args={#1}},
+  set gLogic north function/.style={/pgf/@gLogic north function/.code 2 args={#1}},
+  set gLogic south function/.style={/pgf/@gLogic south function/.code 2 args={#1}},
+  set gLogic east function ={(#1)/(#2+1)}, set gLogic west function ={(#1)/(#2+1)},
+  set gLogic north function={(#1)/(#2+1)}, set gLogic south function={(#1)/(#2+1)},
+  gLogic pin length/.initial=+2\tikzcircuitssizeunit,
+  set gLogic west label/.style={/pgf/@gLogic west label/.code n args={3}{#1}},
+  set gLogic east label/.style={/pgf/@gLogic east label/.code n args={3}{#1}},
+  set gLogic north label/.style={/pgf/@gLogic north label/.code n args={3}{#1}},
+  set gLogic south label/.style={/pgf/@gLogic south label/.code n args={3}{#1}},
+  set gLogic east label ={\scriptsize\pgfmathprint{Alph(#1)}},%
+  set gLogic north label={\scriptsize\pgfmathprint{Alph(\eports+#1)}},%
+  set gLogic west label ={\scriptsize\pgfmathprint{Alph(\eports+\nports+#1)}},%
+  set gLogic south label={\scriptsize\pgfmathprint{Alph(\eports+\nports+\wports+#1)}},%
+}
+\tikzset{
+  circuit declare symbol=gLogic,
+  set gLogic graphic={draw, shape=gLogic, circuit symbol size=width 6 height 15, outer sep=+.5\pgflinewidth}
+}

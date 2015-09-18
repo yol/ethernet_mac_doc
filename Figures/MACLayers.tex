@@ -1,0 +1,64 @@
+\begin{tikzpicture}[
+	node distance=2pt,outer sep=0pt,
+	layer/.style={
+		draw=black,
+		%fill=lightgray,
+		shade,
+		shading=axis,
+		top color=Tgraylight3!40,
+		bottom color=Tgraylight2,
+		%rounded corners,
+		align=center,
+		text height=12pt,
+		text width=2.5cm,
+		text depth=5pt
+	},
+	ethlayer/.style={layer,
+		text width=4.5cm
+	},
+	macimpl/.style={
+		top color=Tlilaclight!40,
+		bottom color=Tlilaclight!70
+	},
+	userimpl/.style={
+		top color=Tbrownlight!50,
+		bottom color=Tbrownlight!80
+	},
+	<->/.tip=Stealth
+]
+\node[ethlayer] (PHY) {PHY};
+\node[ethlayer,above=1.3cm of PHY,text width=3cm,text height=8pt,text depth=3pt] (RS) {Reconciliation};
+\draw[<->] (PHY) -- (RS) node[pos=0.5,anchor=east,align=right] {MII};
+\node[ethlayer,above=of RS] (MAC) {MAC};
+\node[ethlayer,above=of MAC] (LLC) {LLC or other MAC client};
+%\node[ethlayer,bottom color=orange,below=0.7cm of PHY] (Med) {Medium};
+%\draw[<->] (PHY) -- (Med) node[pos=0.5,anchor=east,align=right] {MDI};
+
+\node[ethlayer,right=1.2cm of PHY] (T_PHY) {PHY};
+\node[ethlayer,macimpl,above=1.3cm of T_PHY,text width=3cm,text height=8pt,text depth=3pt] (T_RS) {\texttt{mii\_gmii}};
+\draw[<->] (T_PHY) -- (T_RS) node[pos=0.5,anchor=west,align=left] {MII \\ via \texttt{mii\_gmii\_io}};
+\node[ethlayer,macimpl,above=of T_RS] (T_MAC) {\texttt{framing}};
+\node[ethlayer,macimpl,above=of T_MAC] (T_LLC) {\texttt{tx\_fifo} and \texttt{rx\_fifo}};
+\node[ethlayer,userimpl,above=1cm of T_LLC] (T_IP) {Network layer: IP};
+\node[ethlayer,userimpl,above=of T_IP] (T_TCP) {Transport layer: TCP};
+\node[ethlayer,userimpl,above=of T_TCP] (T_Wishbone) {Application: Wishbone};
+%\node[ethlayer,bottom color=orange,below=0.7cm of T_PHY] (T_Med) {Medium};
+%\draw[<->] (T_PHY) -- (T_Med) node[pos=0.5,anchor=east,align=right] {MDI};
+\draw[<->] (T_IP) -- (T_LLC) node[pos=0.5,anchor=west,align=left] {User FIFO interface};
+
+\node[above=of LLC,align=center] (Higher_Dots) {$\vdots$};
+\node[align=center,anchor=south] at (Higher_Dots |- T_IP.south) (Higher) {Higher layers};
+\node[above=0.3cm of T_Wishbone] (ethMAC) {\textbf{Present thesis}};
+\node[anchor=base] at (Higher |- ethMAC.base) {\textbf{Ethernet layers}};
+
+\draw (MAC.south east) -- (T_MAC.south west)
+      (MAC.north east) -- (T_LLC.north west)
+      (Higher.south east) -- (T_IP.south west)
+      (Higher.north east) -- (T_Wishbone.north west);
+      
+\node[ethlayer,text width=,minimum size=0.4cm,text height=,text depth=,below=0.5cm of PHY.south west,anchor=north west,macimpl] (LegendNode_MacImpl) {};
+\node[right=of LegendNode_MacImpl] (Legend_MacImpl) {\footnotesize Present MAC implementation};
+\node[ethlayer,text width=,minimum size=0.4cm,text height=,text depth=,right=0.5cm of Legend_MacImpl,userimpl] (LegendNode_UserImpl) {};
+\node[right=of LegendNode_UserImpl] (Legend_UserImpl) {\footnotesize Exemplary user application};
+\draw [dotted] ($(PHY.south west)+(-0.3cm,-0.3cm)$) -- ($(T_PHY.south east)+(0.3cm,-0.3cm)$);
+\end{tikzpicture}

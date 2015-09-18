@@ -1,0 +1,89 @@
+\begin{tikzpicture}[circuit logic IEC,
+bufio/.style = {
+		gLogic,
+		gLogic ports=2:0:1:0,
+		circuit symbol size=width 7 height 7,
+		fill=white
+},
+iodelay/.style = {
+	gLogic,
+	gLogic ports=1:0:1:0,
+	set gLogic west label={\scriptsize\ttfamily IDATAIN},
+	set gLogic east label={\scriptsize\ttfamily DATAOUT},
+	circuit symbol size=width 8 height 4,
+	fill=white
+},
+miigmiirx/.style={
+		miigmii,
+		gLogic,
+		gLogic ports=0:0:3:0,
+		circuit symbol size=width 10 height 14
+}
+%	/pgf/buffer gate IEC symbol=
+]
+	\pgfdeclarelayer{bg}
+	\pgfsetlayers{bg,main}
+	\def\pinlength{2\tikzcircuitssizeunit}
+	\def\nodeenclosuresep{0.5cm}
+	\def\pinsep{0.5cm}
+	
+	% RX_CLK
+	\node[pin,miirx,signal to=east] (PIN_RXCLK) {RX\_CLK};
+	\node[ibufg,right=\pinsep of PIN_RXCLK] (IBUF_RXCLK) {};
+	\draw (PIN_RXCLK) -- (IBUF_RXCLK);
+	\node[bufio,right=of IBUF_RXCLK,
+		set gLogic west label={\scriptsize\ttfamily I},
+		set gLogic east label={\scriptsize\ttfamily \ifcase#1 \or IOCLK \or DIVCLK \fi}
+	] (BUFIO) {BUFIO2};
+	\draw (IBUF_RXCLK) -- (BUFIO.wPin 1);
+	\node[bufg,right=of BUFIO.ePin 2] (BUFG) {};
+	\draw (BUFIO.ePin 2) |- (BUFG.input);
+	
+	% FDRE
+	\foreach \rxdnum/\preceding in {0/PIN_RXCLK.west |- BUFIO.south,1/PIN_RXD0.west |- FDRE_RXD0.south} {
+		\node[pin,miirx,signal to=east,below=2.5cm of \preceding,anchor=west] (PIN_RXD\rxdnum) {RXD\rxdnum};
+		\node[ibuf,right=\pinsep of PIN_RXD\rxdnum] (IBUF_RXD\rxdnum) {};
+		\draw (PIN_RXD\rxdnum) -- (IBUF_RXD\rxdnum.input);
+		\node[iodelay,right=of IBUF_RXD\rxdnum,anchor=wPin 1] (IDELAY_RXD\rxdnum) {IODELAY2};	
+		\draw (IBUF_RXD\rxdnum.output) -- (IDELAY_RXD\rxdnum.wPin 1);
+		\node[fdre,right=of IDELAY_RXD\rxdnum.ePin 1,anchor=wPin 1,set gLogic west label={\scriptsize\ttfamily\ifcase##1 \or D \or C \fi},set gLogic east label={\scriptsize\ttfamily Q}] (FDRE_RXD\rxdnum) {FDRE};
+		\node[clockmarker,anchor=west] at($(FDRE_RXD\rxdnum.wPin 2) + (\pinlength,0)$) {};
+		\draw(IDELAY_RXD\rxdnum.ePin 1) -- (FDRE_RXD\rxdnum.wPin 1);
+		
+		\begin{pgfonlayer}{bg}
+			\fill[enclosure] ($(PIN_RXD\rxdnum.north west |- FDRE_RXD\rxdnum.north)+(-\nodeenclosuresep,\nodeenclosuresep)$) rectangle ($	(FDRE_RXD\rxdnum.south east)+(\nodeenclosuresep,-\nodeenclosuresep)$);
+			\node[above left=\nodeenclosuresep and \nodeenclosuresep of PIN_RXD\rxdnum.north west |- FDRE_RXD\rxdnum.north,anchor=south west] {\texttt{RXD\rxdnum} input/output block};
+		\end{pgfonlayer}
+	}
+	
+	\draw (FDRE_RXD0.wPin 2) -- ++(-0.1cm,0) node[linepoint] (FDRE_RXD0_CLKSPLIT) {} |- (BUFIO.ePin 1);
+	\draw (FDRE_RXD0_CLKSPLIT) |- (FDRE_RXD1.wPin 2);
+	
+%				
+	% mii_gmii
+	\node[miigmiirx,right=3cm of BUFG,anchor=wPin 1,align=center,
+		set gLogic west function={#1/7},
+		set gLogic west label={\scriptsize\ifcase#1 \or \texttt{clock\_rx} \else \texttt{mii\_rxd\_i<\pgfmathprint{int(#1-1)}>} \fi}
+	] (MII_GMII) {\texttt{mii\_gmii}\\RX logic};
+	\node[clockmarker,anchor=west] at($(MII_GMII.wPin 1) + (\pinlength,0)$) {};
+	\node[pin,signal to=east,above=0.4cm of MII_GMII.north west,anchor=south west] (PIN_CLOCKRX) {\texttt{clock\_rx\_o}}; 
+	\draw (MII_GMII.wPin 1) ++(-1cm,0) node[linepoint] {} |- (PIN_CLOCKRX.west);
+	
+	\draw (BUFG.output) -- (MII_GMII.wPin 1);
+	\draw (FDRE_RXD0.ePin 1) -- ++(0.2cm,0) |- (MII_GMII.wPin 2);
+	\draw (FDRE_RXD1.ePin 1) -- ++(0.5cm,0) |- (MII_GMII.wPin 3);
+%	\draw (MII_GMII.ePin 1) -- ++(1.5cm,0) |- (FDRE_TXD0.wPin 1);
+%	\draw (MII_GMII.ePin 2) -- ++(1.2cm,0) |- (FDRE_TXD1.wPin 1);
+%	\draw (CLKMUX.north) ++ (0,-0.5cm) -- ++ (-6.3cm,0) node[linepoint,pos=0] {} |- (MII_GMII.wPin 1);
+%	\draw (MII_GMII.wPin 1) node[linepoint] {} -- ++(0,-3cm) node[pin,rotate=-90,signal to=east,anchor=west] (PIN_CLKOUT) {clock\_tx\_o};
+%	
+	% ...
+	\node[below=0.5cm of PIN_RXD1.west |- FDRE_RXD1.south,anchor=north west,align=left] {$\vdots$ \\ repeat for \texttt{RXD<2:7>}, \texttt{RX\_EN}, and \texttt{RX\_ER}};
+	\node[below right=0.2cm and 0 of MII_GMII.wPin 3] {$\vdots$};
+	
+	% enclosures
+	\begin{pgfonlayer}{bg}
+			\fill[enclosure] ($(PIN_RXCLK.west |- BUFIO.north)+(-\nodeenclosuresep,\nodeenclosuresep)$) rectangle ($(IBUF_RXCLK.east |- BUFIO.south)+(\nodeenclosuresep,-\nodeenclosuresep)$);
+			\node[above left=\nodeenclosuresep and \nodeenclosuresep of PIN_RXCLK.north west |- BUFIO.north,anchor=south west] {\texttt{RX\_CLK} input/output block};
+	\end{pgfonlayer}
+\end{tikzpicture}

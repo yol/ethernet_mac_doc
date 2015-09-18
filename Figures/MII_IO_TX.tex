@@ -1,0 +1,114 @@
+\begin{tikzpicture}[circuit logic IEC,
+%	/pgf/buffer gate IEC symbol=
+miigmiitx/.style={
+		miigmii,
+		gLogic,
+		gLogic ports=2:0:1:0,
+		circuit symbol size=width 10 height 14,
+}
+]
+	\pgfdeclarelayer{bg}
+	\pgfsetlayers{bg,main}
+	\def\pinlength{2\tikzcircuitssizeunit}
+	\def\nodeenclosuresep{0.6cm}
+	\def\pinsep{0.5cm}
+	
+	\node[bufgmux,rotate=180,minimum width=1cm] (CLKMUX) {};
+	\node[below right=-0.1cm] at (CLKMUX.west) {\scriptsize\ttfamily S};
+	\node[below left] at (CLKMUX.north) {\scriptsize\ttfamily O};
+	\node[above left] at (CLKMUX.south east) {\scriptsize\ttfamily I0};
+	\node[above left] at (CLKMUX.south west) {\scriptsize\ttfamily I1};
+
+	% ODDR2
+	\node[oddr,fill=white,below right=1cm and 2.5cm of CLKMUX,set gLogic west label={\scriptsize\ttfamily\ifcase#1 \or D0 \or D1 \or C0 \or C1 \or CE \fi},set gLogic east label={\scriptsize\ttfamily Q}] (ODDR_GTXCLK) {ODDR2};
+	\node[inversion,anchor=east] at ($(ODDR_GTXCLK.wPin 3) + (\pinlength,0)$) {};
+	\node[clockmarker,anchor=west] at ($(ODDR_GTXCLK.wPin 3) + (\pinlength,0)$) {};
+	\node[clockmarker,anchor=west] at ($(ODDR_GTXCLK.wPin 4) + (\pinlength,0)$) {};
+	
+	\node[obuf,right=of ODDR_GTXCLK] (OBUF_GTXCLK) {};
+	\draw (ODDR_GTXCLK.ePin 1) -- (OBUF_GTXCLK.input);
+	
+	\node[pin,miitx,signal to=east,right=\pinsep of OBUF_GTXCLK] (PIN_GTXCLK) {GTX\_CLK};
+	\draw (OBUF_GTXCLK.output) -- (PIN_GTXCLK);
+	
+	% FDRE
+	\foreach \txdnum/\preceding in {0/ODDR_GTXCLK,1/FDRE_TXD0} {
+		\node[fdre,below=2cm of \preceding,set gLogic west label={\scriptsize\ttfamily\ifcase##1 \or D \or C \fi},set gLogic east label={\scriptsize\ttfamily Q}] (FDRE_TXD\txdnum) {FDRE};
+		\node[clockmarker,anchor=west] at($(FDRE_TXD\txdnum.wPin 2) + (\pinlength,0)$) {};
+		
+		\node[obuf,right=of FDRE_TXD\txdnum] (OBUF_TXD\txdnum) {};
+		\draw (FDRE_TXD\txdnum.ePin 1) -- (OBUF_TXD\txdnum.input);
+		\node[pin,miitx,signal to=east, right=\pinsep of OBUF_TXD\txdnum] (PIN_TXD\txdnum) {TXD\txdnum};
+		\draw (OBUF_TXD\txdnum.output) -- (PIN_TXD\txdnum);
+		
+		\begin{pgfonlayer}{bg}
+			\fill[enclosure] ($(FDRE_TXD\txdnum.north west)+(-\nodeenclosuresep,\nodeenclosuresep)$) rectangle ($	(PIN_GTXCLK.south east |- FDRE_TXD\txdnum.south east)+(\nodeenclosuresep,-\nodeenclosuresep)$);
+			\node[above left=\nodeenclosuresep and \nodeenclosuresep of FDRE_TXD\txdnum.north west,anchor=south west] {\texttt{TXD\txdnum} input/output block};
+		\end{pgfonlayer}
+	}
+	
+	% BUFGMUX to ODDR2 and FDRE
+	\draw (CLKMUX.north) |- (ODDR_GTXCLK.wPin 3);
+	\draw (CLKMUX.north |- ODDR_GTXCLK.wPin 3) node [linepoint] {} |- (ODDR_GTXCLK.wPin 4);
+	\draw (CLKMUX.north |- ODDR_GTXCLK.wPin 4) node [linepoint] {} |- (FDRE_TXD0.wPin 2);	
+	\draw (CLKMUX.north |- FDRE_TXD0.wPin 2) node [linepoint] {} |- (FDRE_TXD1.wPin 2);
+	
+	% ODDR2 D0 and D1
+	\draw [-{Straight Barb[length=8pt,width=8pt]}] (ODDR_GTXCLK.wPin 1) -- ++(-0.5cm,0) node[above] {$V_{CC}$};
+	\draw (ODDR_GTXCLK.wPin 2) -- ++(-0.5cm,0) coordinate(ODDR_GTXCLK_D1);
+	\draw (ODDR_GTXCLK_D1) ++(0,0.2cm) -- ++(0,-0.4cm);	
+	
+	% TX_CLK input to BUFGMUX
+	\node[ibufg,above left=of CLKMUX] (IBUF_TXCLK) {};
+	\node[pin,miitx,signal to=east,left=of IBUF_TXCLK] (PIN_TXCLK) {TX\_CLK};
+	\draw (PIN_TXCLK) -- (IBUF_TXCLK.input);
+	\draw (IBUF_TXCLK.output) -| (CLKMUX.south east);
+		
+	% CLOCK_125 input to BUFGMUX
+	\node[pin,signal to=east,above=1.4cm of PIN_TXCLK.west,anchor=west] (PIN_CLK125) {clock\_125\_i};
+	\draw (PIN_CLK125) -| (CLKMUX.south west);
+	
+	% speed input to BUFGMUX
+	\node[pin,signal to=east,above=of PIN_CLK125.west,anchor=west] (PIN_SPEED) {speed\_select\_i<1>};
+	\draw (PIN_SPEED.east) -- ++(0.8cm,0) coordinate(PIN_SPEED_LINE) |- (CLKMUX.west);
+	% speed_select to ODDR2
+	\draw (PIN_SPEED_LINE |- CLKMUX.west) node[linepoint] {} |- (ODDR_GTXCLK.wPin 5);
+	
+	% mii_gmii
+	\node[miigmiitx,below left=-3cm and 4cm of ODDR_GTXCLK,align=center,
+		set gLogic west function={0.2},
+		set gLogic east function={ifthenelse(#1<2,0.8,0.65)},
+		set gLogic west label={\scriptsize\texttt{clock\_tx\_i}},
+		set gLogic east label={\scriptsize\texttt{mii\_txd\_o<\pgfmathprint{int(#1-1)}>}}
+	] (MII_GMII) {\texttt{mii\_gmii}\\TX logic};
+	\node[clockmarker,anchor=west] at($(MII_GMII.wPin 1) + (\pinlength,0)$) {};
+	\draw (MII_GMII.ePin 1) -- ++(1.0cm,0) |- (FDRE_TXD0.wPin 1);
+	\draw (MII_GMII.ePin 2) -- ++(0.7cm,0) |- (FDRE_TXD1.wPin 1);
+	\draw (CLKMUX.north) ++ (0,-0.5cm) -- ++ (-6.0cm,0) node[linepoint,pos=0] {} |- (MII_GMII.wPin 1);
+	\draw (MII_GMII.wPin 1) node[linepoint] {} |- ++(\pinlength,-3.5cm) node[pin,signal to=east,anchor=west] (PIN_CLKOUT) {clock\_tx\_o};
+	
+	% ...
+	\node[below left=0.7cm and 0 of FDRE_TXD1,anchor=north west,align=left] {$\vdots$ \\ repeat for \texttt{TXD<2:7>} and \texttt{TX\_EN}};
+	\node[below=0.2cm of MII_GMII.ePin 2] {$\vdots$};
+
+	% enclosures
+	\begin{pgfonlayer}{bg}
+		\fill[enclosure] ($(ODDR_GTXCLK.north west)+(-\nodeenclosuresep,\nodeenclosuresep)$) rectangle ($(PIN_GTXCLK.south east |- ODDR_GTXCLK.south east)+(\nodeenclosuresep,-\nodeenclosuresep)$);
+		\node[above left=\nodeenclosuresep and \nodeenclosuresep,anchor=south west] at ($(ODDR_GTXCLK.north west)$) {\texttt{GTX\_CLK} input/output block};
+	\end{pgfonlayer}
+
+%  \node[gLogic,
+%    gLogic ports=8:0:6:0,
+%    align=center,
+%    set gLogic west function={ifthenelse(#1<4,#1,(#1+2))/9},
+%    set gLogic east label={\scriptsize$Y_{\pgfmathprint{int(\eports-#1+1)}}$},
+%    set gLogic west label={\scriptsize\ifnum#1<4\pgfmathprint{Alph(#1)}\else$E_{\pgfmathprint{int(#1-3)}}%$\fi}] (n) {R2D2-\\Decoder};
+%  \draw (n.ePin 1) to[bend right] (n.ePin 8);
+%  \draw (n.wPin 1) to [bend right] (n.wPin 3);
+%
+%  \node[gLogic, circuit symbol size=width 4 height 8] (m) at (4,0) {};
+%  \draw (m.ePin 1) to [bend right] (m.ePin 2);
+%  \draw (m.wPin 1) to [bend right] (m.wPin 2);
+%
+%  \draw[line cap=rect] (n.ePin 2) --++ (right:.5cm) |- (m.sPin 1);
+\end{tikzpicture}

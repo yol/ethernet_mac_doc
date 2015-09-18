@@ -1,0 +1,72 @@
+\begin{tikztimingtable}[timing/font=\normalfont,timing/wscale=2,
+ttext/.style={
+	minimum height=0.8cm,
+	node font=\small
+},
+timing/table/lines/.append style={
+	dashed
+},
+timing/u/background/.append style={fill=black!20},
+delayarrow/.style={
+	-{Stealth}
+},
+clkdelay/.style={
+	Tred
+},
+ddelay/.style={
+	Torange
+},
+ddelayarrow/.style={delayarrow,
+	dotted
+}
+]
+	\texttt{RX\_CLK} at pin &   3C  N(c1) 4C 4C 2C \\
+	\texttt{RXD}   at pin & 1U N(d1) 2D 6U 2D 2U \\
+	\texttt{RX\_CLK} at FF & 0.7H 4C N(c2) 4C 4C 0.3C  \\
+	\texttt{RXD}   at FF (min. delay) & 2.7U N(d2) 2D 6U 2D 0.3U \\
+	\texttt{RXD}   at FF (max. delay) & 4.2U N(d3) 2D 6U 0.8D \\
+\extracode
+%\tablegrid
+\def\wscale{2}
+\foreach \lineoffset in {1,3,4.2,4.7}{
+	\pgfmathparse{\lineoffset * \wscale}
+	\vertlines{\pgfmathresult}
+}
+
+\draw [<->] (1*\wscale,2) -- (3*\wscale,2) node [above,midway,ttext] {$T_{valid,GMII}$};
+\draw [<->] (4.2*\wscale,2) -- (4.7*\wscale,2) node[above,midway,ttext] {$T_{setup,FF}$};
+
+\def\scalepos{-2*\nrows}
+\draw [->] (0,\scalepos) -- (\twidth,\scalepos) node[right] {$\Delta t$ [ns]};
+
+\foreach \p in {-2,0,...,8} {
+	\node[draw,fill,minimum width=0.1pt,inner sep=0,minimum height=0.25cm] at (3*\wscale+\p*\wscale,\scalepos) (Mark_\p) {};
+	\node[node distance=0mm,below=of Mark_\p] {\footnotesize \p};
+}
+
+\foreach \n/\s in {c1/clkdelay,c2/clkdelay,d1/ddelay,d2/ddelay,d3/ddelay} {
+	\draw [\s] (\n.mid) ellipse (.3 and .7);
+}
+\draw [clkdelay,delayarrow] ($(c1.mid) - (0,.7)$) coordinate parabola [bend pos=0.4] ($(c2.mid) + (0,.7)$);
+
+\draw [ddelay,ddelayarrow] ($(d1.mid) - (0,.7)$) parabola [bend pos=0.6] ($(d2.mid) + (0,.7)$);
+\draw [ddelay,ddelayarrow] ($(d1.mid) - (0,.7)$) parabola [bend pos=0.2] ($(d3.mid) + (0,.7)$);
+
+\begin{scope}[every node/.style={node font=\footnotesize,inner sep=0}]
+
+\matrix [matrix anchor=north west,anchor=west,row sep=1.5mm,column sep=1.5mm] at (0,\scalepos-3) {
+	\draw [clkdelay,delayarrow] (0,0) -- ++(1cm,0); & \node {Clock delay}; & [4mm]
+	\draw [ddelay,ddelayarrow] (0,0) -- ++(1cm,0); & \node {Data delay}; \\
+	\node {\texttiming{2D}}; & \node {Data valid}; &
+	\node {\texttiming{2U}}; & \node {Data possibly invalid}; \\
+};
+
+%	\draw [clkdelay,delayarrow] (0,\scalepos-3) coordinate (CLKArrow) -- ++(1cm,0) node[right] (CLKLegend) {Clock delay};
+%\draw [ddelay,ddelayarrow] ($(CLKLegend) + (1cm,0)$) -- ++(1cm,0) node[right] {Data delay}; \\
+
+%	\node [below=5mm of CLKArrow,anchor=west,inner sep=0] (ValidDataLegend) {\texttiming{2D}};
+%	\node [below=5mm of CLKLegend] {Data valid};
+%	\node [right=of ValidDataLegend] {\texttiming{2U} Data possibly invalid};
+\end{scope}
+
+\end{tikztimingtable}

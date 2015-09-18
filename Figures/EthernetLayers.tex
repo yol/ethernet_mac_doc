@@ -1,0 +1,54 @@
+\begin{tikzpicture}[
+	node distance=2pt,outer sep=0pt,
+	layer/.style={
+		draw=black,
+		%fill=lightgray,
+		shade,
+		shading=axis,
+		top color=Tgraylight3!40,
+		bottom color=Tgraylight2,
+		%rounded corners,
+		align=center,
+		text height=12pt,
+		text width=2.5cm,
+		text depth=5pt
+	},
+	ethlayer/.style={layer,
+		text width=8cm
+	},
+	datalink/.style={
+		top color=Tlilaclight!40,
+		bottom color=Tlilaclight!70
+	},
+	physical/.style={
+		top color=Tbluelight!40,
+		bottom color=Tbluelight!70
+	},
+	<->/.tip=Stealth
+]
+\node[layer] (App) {Application};
+\node[above=of App] (OSI) {\textbf{OSI reference model layers}};
+\node[layer,below=of App] (Pres) {Presentation};
+\node[layer,below=of Pres] (Sess) {Session};
+\node[layer,below=of Sess] (Transp) {Transport};
+\node[layer,below=of Transp] (Netw) {Network};
+\node[layer,datalink,below=of Netw] (DL) {Data link};
+\node[layer,physical,below=of DL] (Phys) {Physical};
+
+\node[ethlayer,physical,right=50pt of Phys] (PHY) {Physical layer (PHY)};
+%\node[physical,above=of PHY] (MII) {Media Independent Interface (MII)};
+\node[ethlayer,physical,above=1.5cm of PHY,text width=3cm,text height=8pt,text depth=3pt] (RS) {Reconciliation};
+\draw[<->] (PHY) -- (RS) node[pos=0.5,anchor=east,align=right] {Media-independent interface \\ (MII)};
+\node[ethlayer,datalink,above=of RS] (MAC) {Media access control (MAC)};
+\node[ethlayer,datalink,above=of MAC,dashed] (LLC) {Logical link control (LLC) or other MAC client};
+\node[ethlayer,top color=Torangelight!40,bottom color=Torangelight!70,below=1.5cm of PHY] (Med) {Medium};
+\draw[<->] (PHY) -- (Med) node[pos=0.5,anchor=east,align=right] {Media-dependent interface \\ (MDI)};
+
+\node[above=of LLC,align=center] (Higher) {Higher layers\\
+$\vdots$};
+\node[anchor=base] at (Higher |- OSI.base) {\textbf{Ethernet layers}};
+
+\draw (Phys.south east) -- (PHY.south west)
+      (Phys.north east) -- (MAC.south west)
+      (DL.north east)   -- (LLC.north west);
+\end{tikzpicture}

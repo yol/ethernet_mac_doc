@@ -1,0 +1,20 @@
+\begin{tikzpicture}[commandnode/.append style={top color=Tgreenlight!10,bottom color=Tgreenlight!20},<->/.tip=Latex]
+\node [decisionnode,text width=2.3cm] (EmptyDecision) {\texttt{empty} = 0?};
+\node [commandnode,below=0.7cm of EmptyDecision] (RDEN) {Assert \texttt{rd\_en}};
+\node [commandnode,below=of RDEN,text width=5.5cm] (SizeMSB) {Read MSB of size $n$ from \texttt{data}};
+\node [commandnode,below=of SizeMSB,text width=5.5cm] (SizeLSB) {Read LSB of size $n$ from \texttt{data}};
+\node [commandnode,below=of SizeLSB,text width=5.5cm] (Payload) {Read one byte of data from \texttt{data}};
+\node [decisionnode,below=of Payload,text width=3cm] (Decision) {\texttt{empty} = 1?};
+\node [commandnode,below=0.7cm of Decision] (RXRDEN_De) {Deassert \texttt{rd\_en}};
+\draw[->] (RDEN) -- (SizeMSB);
+\draw[->] (SizeMSB) -- (SizeLSB);
+\draw[->] (SizeLSB) -- (Payload);
+\draw[->] (Payload) -- (Decision);
+\begin{scope}[on background layer]
+\draw[->] (EmptyDecision.center) -- (RDEN) node[pos=1,above right] {Yes};
+\draw[->] (EmptyDecision.center) -- (EmptyDecision.east) -- ++(0.4cm,0) node[pos=0,below right] {No} |- ($(EmptyDecision.north)+(0,0.3cm)$);
+\draw[->] (Decision.center) -- (RXRDEN_De) node[pos=1,above right] {Yes};
+\draw[->] (Decision.center) -- (Decision.east) -- ++(1cm,0) node[pos=0,below right] {No} |- (Payload.east);
+\end{scope}
+\draw[->] (RXRDEN_De) -- ++(0,-1cm) -- ++(3.7cm,0) |- ($(EmptyDecision.north)+(0,0.5cm)$) -- (EmptyDecision);
+\end{tikzpicture}

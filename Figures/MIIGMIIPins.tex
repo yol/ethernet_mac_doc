@@ -1,0 +1,65 @@
+\begin{tikzpicture}[
+	node distance=2pt,outer sep=0pt,
+	block/.style={
+		draw=black,
+		%fill=lightgray,
+		shade,
+		shading=axis,
+		top color=white,
+		bottom color=lightgray,
+		%rounded corners,
+		align=center,
+		text height=3cm,
+		text width=2.5cm,
+		text depth=3cm
+	},
+	gmii/.style={
+		color=Tblue,
+		dash dot dot
+	},
+	mii/.style={
+		color=Torange,
+		dashed
+	},
+	<->/.tip=Stealth
+]
+
+\node[block] (MAC) {MAC};
+\node[block,right=6cm of MAC] (PHY) {PHY};
+
+\begin{scope}[node font=\ttfamily]
+\def\sigoffset{-0.4cm}
+\def\aboveoffset{-0.5mm}
+\newcounter{offsetcounter}
+\setcounter{offsetcounter}{1}
+\draw [->] ($(MAC.north east) + \value{offsetcounter}*(0,\sigoffset)$) -- ($(PHY.north west) + \value{offsetcounter}*(0,\sigoffset)$) node[midway,above=\aboveoffset] {TX\_EN};
+\stepcounter{offsetcounter}
+\draw [->] ($(MAC.north east) + \value{offsetcounter}*(0,\sigoffset)$) -- ($(PHY.north west) + \value{offsetcounter}*(0,\sigoffset)$) node[midway,above=\aboveoffset] {TXD<3:0>};
+\stepcounter{offsetcounter}
+\draw [->,gmii] ($(MAC.north east) + \value{offsetcounter}*(0,\sigoffset)$) -- ($(PHY.north west) + \value{offsetcounter}*(0,\sigoffset)$) node[midway,above=\aboveoffset] {TXD<7:4>};
+\stepcounter{offsetcounter}
+\draw [->] ($(MAC.north east) + \value{offsetcounter}*(0,\sigoffset)$) -- ($(PHY.north west) + \value{offsetcounter}*(0,\sigoffset)$) node[midway,above=\aboveoffset] {TX\_ER};
+\stepcounter{offsetcounter}
+\draw [<-,mii] ($(MAC.north east) + \value{offsetcounter}*(0,\sigoffset)$) -- ($(PHY.north west) + \value{offsetcounter}*(0,\sigoffset)$) node[midway,above=\aboveoffset] {TX\_CLK};
+\stepcounter{offsetcounter}
+\draw [->,gmii] ($(MAC.north east) + \value{offsetcounter}*(0,\sigoffset)$) -- ($(PHY.north west) + \value{offsetcounter}*(0,\sigoffset)$) node[midway,above=\aboveoffset] {GTX\_CLK};
+\stepcounter{offsetcounter}\stepcounter{offsetcounter}
+\draw [<-] ($(MAC.north east) + \value{offsetcounter}*(0,\sigoffset)$) -- ($(PHY.north west) + \value{offsetcounter}*(0,\sigoffset)$) node[midway,above=\aboveoffset] {RX\_DV};
+\stepcounter{offsetcounter}
+\draw [<-] ($(MAC.north east) + \value{offsetcounter}*(0,\sigoffset)$) -- ($(PHY.north west) + \value{offsetcounter}*(0,\sigoffset)$) node[midway,above=\aboveoffset] {RXD<3:0>};
+\stepcounter{offsetcounter}
+\draw [<-,gmii] ($(MAC.north east) + \value{offsetcounter}*(0,\sigoffset)$) -- ($(PHY.north west) + \value{offsetcounter}*(0,\sigoffset)$) node[midway,above=\aboveoffset] {RXD<7:4>};
+\stepcounter{offsetcounter}
+\draw [<-] ($(MAC.north east) + \value{offsetcounter}*(0,\sigoffset)$) -- ($(PHY.north west) + \value{offsetcounter}*(0,\sigoffset)$) node[midway,above=\aboveoffset] {RX\_ER};
+\stepcounter{offsetcounter}
+\draw [<-] ($(MAC.north east) + \value{offsetcounter}*(0,\sigoffset)$) -- ($(PHY.north west) + \value{offsetcounter}*(0,\sigoffset)$) node[midway,above=\aboveoffset] {RX\_CLK};
+\stepcounter{offsetcounter}\stepcounter{offsetcounter}
+\draw [->] ($(MAC.north east) + \value{offsetcounter}*(0,\sigoffset)$) -- ($(PHY.north west) + \value{offsetcounter}*(0,\sigoffset)$) node[midway,above=\aboveoffset] {MDC};
+\stepcounter{offsetcounter}
+\draw [<->] ($(MAC.north east) + \value{offsetcounter}*(0,\sigoffset)$) -- ($(PHY.north west) + \value{offsetcounter}*(0,\sigoffset)$) node[midway,above=\aboveoffset] {MDIO};
+\end{scope}
+
+\draw ($(MAC.south west) + (0,-0.3cm)$) -- ++(1cm,0) node[right] (MIIGMIIText) {MII/GMII};
+\draw [mii,text=black] ($(MIIGMIIText.east) + (0.3cm,0)$) -- ++(1cm,0) node[right] (MIIText) {MII only};
+\draw [gmii,text=black] ($(MIIText.east) + (0.3cm,0)$) -- ++(1cm,0) node[right] {GMII only};
+\end{tikzpicture}

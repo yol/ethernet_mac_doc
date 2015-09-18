@@ -1,0 +1,20 @@
+\begin{tikzpicture}[commandnode/.append style={top color=Tredlight!10,bottom color=Tredlight!20},<->/.tip=Latex]
+\node [decisionnode,text width=2.3cm] (ReadyDecision) {Frame ready?};
+\node [commandnode,below=0.7cm of ReadyDecision] (WREN) {Assert \texttt{wr\_en}};
+\node [commandnode,below=of WREN,text width=5.2cm] (SizeMSB) {Write MSB of size $n$ to \texttt{data}};
+\node [commandnode,below=of SizeMSB,text width=5.2cm] (SizeLSB) {Write LSB of size $n$ to \texttt{data}};
+\node [commandnode,below=of SizeLSB,text width=5.2cm] (Payload) {Write one byte of data to \texttt{data}};
+\node [decisionnode,below=of Payload,text width=3cm] (Decision) {$n$ bytes written?};
+\node [commandnode,below=0.7cm of Decision] (TXWREN_De) {Deassert \texttt{wr\_en}};
+\draw[->] (WREN) -- (SizeMSB);
+\draw[->] (SizeMSB) -- (SizeLSB);
+\draw[->] (SizeLSB) -- (Payload);
+\draw[->] (Payload) -- (Decision);
+\begin{scope}[on background layer]
+\draw[->] (ReadyDecision.center) -- (WREN) node[pos=1,above right] {Yes};
+\draw[->] (ReadyDecision.center) -- (ReadyDecision.east) -- ++(0.4cm,0) node[pos=0,below right] {No} |- ($(ReadyDecision.north)+(0,0.3cm)$);
+\draw[->] (Decision.center) -- (TXWREN_De) node[pos=1,above right] {Yes};
+\draw[->] (Decision.center) -- (Decision.east) -- ++(1cm,0) node[pos=0,below right] {No} |- (Payload.east);
+\end{scope}
+\draw[->] (TXWREN_De) -- ++(0,-1cm) -- ++(3.5cm,0) |- ($(ReadyDecision.north)+(0,0.5cm)$) -- (ReadyDecision);
+\end{tikzpicture}
